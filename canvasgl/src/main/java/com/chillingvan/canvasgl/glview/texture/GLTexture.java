@@ -18,14 +18,6 @@ public class GLTexture {
         this.surfaceTexture = outsideSurfaceTexture;
     }
 
-    public RawTexture getRawTexture() {
-        return rawTexture;
-    }
-
-    public SurfaceTexture getSurfaceTexture() {
-        return surfaceTexture;
-    }
-
     public static GLTexture createRaw(int width, int height, boolean opaque, int target, ICanvasGL canvasGL) {
         RawTexture rawTexture = new RawTexture(width, height, false, target);
         if (!rawTexture.isLoaded()) {
@@ -33,6 +25,14 @@ public class GLTexture {
         }
         SurfaceTexture surfaceTexture = new SurfaceTexture(rawTexture.getId());
         return new GLTexture(rawTexture, surfaceTexture);
+    }
+
+    public RawTexture getRawTexture() {
+        return rawTexture;
+    }
+
+    public SurfaceTexture getSurfaceTexture() {
+        return surfaceTexture;
     }
 
 }

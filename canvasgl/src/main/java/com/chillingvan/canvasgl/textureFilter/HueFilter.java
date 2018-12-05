@@ -31,7 +31,7 @@ import com.chillingvan.canvasgl.glcanvas.BasicTexture;
  * Created by Chilling on 2016/11/1.
  */
 
-public class HueFilter extends BasicTextureFilter implements OneValueFilter{
+public class HueFilter extends BasicTextureFilter implements OneValueFilter {
 
 
     public static final String UNIFORM_HUE = "hueAdjust";

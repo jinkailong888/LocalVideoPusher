@@ -34,7 +34,7 @@ import com.chillingvan.canvasgl.glcanvas.BasicTexture;
 /**
  * saturation: The degree of saturation or desaturation to apply to the image (0.0 - 2.0, with 1.0 as the default)
  */
-public class SaturationFilter extends BasicTextureFilter implements OneValueFilter{
+public class SaturationFilter extends BasicTextureFilter implements OneValueFilter {
 
     public static final String UNIFORM_SATURATION = "saturation";
     public static final String SATURATION_FRAGMENT_SHADER = "" +

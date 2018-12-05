@@ -1,6 +1,5 @@
 package com.chillingvan.canvasgl.glview.texture.gles;
 
-import android.nfc.Tag;
 import android.opengl.EGL14;
 import android.opengl.EGLConfig;
 import android.opengl.EGLContext;
@@ -37,6 +36,16 @@ public class EglHelperAPI17 implements IEglHelper {
         this.eglWindowSurfaceFactory = eglWindowSurfaceFactory;
     }
 
+    public static void logEglErrorAsWarning(String tag, String function, int error) {
+        FileLogger.w(tag, formatEglError(function, error));
+    }
+
+    public static void throwEglException(String function, int error) {
+        String message = formatEglError(function, error);
+        FileLogger.e(TAG, "throwEglException tid=" + Thread.currentThread().getId() + " " + message);
+        throw new RuntimeException(message);
+    }
+
     @Override
     public EglContextWrapper start(EglContextWrapper eglContext) {
         FileLogger.w(TAG, "start() tid=" + Thread.currentThread().getId());
@@ -63,10 +72,10 @@ public class EglHelperAPI17 implements IEglHelper {
         }
         mEglConfig = eglConfigChooser.chooseConfig(mEglDisplay, false);
 
-            /*
-            * Create an EGL context. We want to do this as rarely as we can, because an
-            * EGL context is a somewhat heavy object.
-            */
+        /*
+         * Create an EGL context. We want to do this as rarely as we can, because an
+         * EGL context is a somewhat heavy object.
+         */
         mEglContext = eglContextFactory.createContextAPI17(mEglDisplay, mEglConfig, eglContext.getEglContext());
         if (mEglContext == null || mEglContext == EGL14.EGL_NO_CONTEXT) {
             FileLogger.d(TAG, "mEglContext:" + mEglContext);
@@ -125,7 +134,6 @@ public class EglHelperAPI17 implements IEglHelper {
         return true;
     }
 
-
     @Override
     public int swap() {
         if (!EGL14.eglSwapBuffers(mEglDisplay, mEglSurface)) {
@@ -164,7 +172,6 @@ public class EglHelperAPI17 implements IEglHelper {
         }
     }
 
-
     /**
      * Sends the presentation time stamp to EGL.
      *
@@ -177,17 +184,7 @@ public class EglHelperAPI17 implements IEglHelper {
         }
     }
 
-    public static void logEglErrorAsWarning(String tag, String function, int error) {
-        FileLogger.w(tag, formatEglError(function, error));
-    }
-
     private void throwEglException(String function) {
         throwEglException(function, EGL14.eglGetError());
-    }
-
-    public static void throwEglException(String function, int error) {
-        String message = formatEglError(function, error);
-        FileLogger.e(TAG, "throwEglException tid=" + Thread.currentThread().getId() + " " + message);
-        throw new RuntimeException(message);
     }
 }

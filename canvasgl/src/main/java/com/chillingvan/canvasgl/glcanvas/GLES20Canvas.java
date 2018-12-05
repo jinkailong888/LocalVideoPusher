@@ -49,21 +49,36 @@ import java.util.Map;
  * --> setPosition  --> draw --> setMatrix
  */
 public class GLES20Canvas implements GLCanvas {
+    public static final String POSITION_ATTRIBUTE = "aPosition";
+    public static final String COLOR_UNIFORM = "uColor";
+    public static final String MATRIX_UNIFORM = "uMatrix";
+    public static final String TEXTURE_MATRIX_UNIFORM = "uTextureMatrix";
+    public static final String TEXTURE_SAMPLER_UNIFORM = "uTextureSampler";
+    public static final String ALPHA_UNIFORM = "uAlpha";
+    public static final String TEXTURE_COORD_ATTRIBUTE = "aTextureCoordinate";
+    public static final String MESH_VERTEX_SHADER = ""
+            + "uniform mat4 " + MATRIX_UNIFORM + ";\n"
+            + "attribute vec2 " + POSITION_ATTRIBUTE + ";\n"
+            + "attribute vec2 " + TEXTURE_COORD_ATTRIBUTE + ";\n"
+            + "varying vec2 vTextureCoord;\n"
+            + "void main() {\n"
+            + "  vec4 pos = vec4(" + POSITION_ATTRIBUTE + ", 0.0, 1.0);\n"
+            + "  gl_Position = " + MATRIX_UNIFORM + " * pos;\n"
+            + "  vTextureCoord = " + TEXTURE_COORD_ATTRIBUTE + ";\n"
+            + "}\n";
+    public static final int INITIAL_RESTORE_STATE_SIZE = 8;
     // ************** Constants **********************
     private static final String TAG = GLES20Canvas.class.getSimpleName();
     private static final int FLOAT_SIZE = Float.SIZE / Byte.SIZE;
     private static final float OPAQUE_ALPHA = 0.95f;
-
     private static final int COORDS_PER_VERTEX = 2;
     private static final int VERTEX_STRIDE = COORDS_PER_VERTEX * FLOAT_SIZE;
-
     private static final int COUNT_FILL_VERTEX = 4;
     private static final int COUNT_LINE_VERTEX = 2;
     private static final int COUNT_RECT_VERTEX = 4;
     private static final int OFFSET_FILL_RECT = 0;
     private static final int OFFSET_DRAW_LINE = OFFSET_FILL_RECT + COUNT_FILL_VERTEX;
     private static final int OFFSET_DRAW_RECT = OFFSET_DRAW_LINE + COUNT_LINE_VERTEX;
-
     private static final float[] BOX_COORDINATES = {
             0, 0, // Fill rectangle
             1, 0,
@@ -76,123 +91,32 @@ public class GLES20Canvas implements GLCanvas {
             1, 1,
             1, 0,
     };
-
     private static final float[] BOUNDS_COORDINATES = {
             0, 0, 0, 1,
             1, 1, 0, 1,
     };
-
-    public static final String POSITION_ATTRIBUTE = "aPosition";
-    public static final String COLOR_UNIFORM = "uColor";
-    public static final String MATRIX_UNIFORM = "uMatrix";
-    public static final String TEXTURE_MATRIX_UNIFORM = "uTextureMatrix";
-    public static final String TEXTURE_SAMPLER_UNIFORM = "uTextureSampler";
-    public static final String ALPHA_UNIFORM = "uAlpha";
-    public static final String TEXTURE_COORD_ATTRIBUTE = "aTextureCoordinate";
-
-    public static final String MESH_VERTEX_SHADER = ""
-            + "uniform mat4 " + MATRIX_UNIFORM + ";\n"
-            + "attribute vec2 " + POSITION_ATTRIBUTE + ";\n"
-            + "attribute vec2 " + TEXTURE_COORD_ATTRIBUTE + ";\n"
-            + "varying vec2 vTextureCoord;\n"
-            + "void main() {\n"
-            + "  vec4 pos = vec4(" + POSITION_ATTRIBUTE + ", 0.0, 1.0);\n"
-            + "  gl_Position = " + MATRIX_UNIFORM + " * pos;\n"
-            + "  vTextureCoord = " + TEXTURE_COORD_ATTRIBUTE + ";\n"
-            + "}\n";
-
-    public static final int INITIAL_RESTORE_STATE_SIZE = 8;
     private static final int MATRIX_SIZE = 16;
-
-    private Map<DrawShapeFilter, Integer> mDrawShapeFilterMapProgramId = new HashMap<>();
-    private Map<TextureFilter, Integer> mTextureFilterMapProgramId = new HashMap<>();
-    private Map<TextureFilter, Integer> mOESTextureFilterMapProgramId = new HashMap<>();
-
-    // Keep track of restore state
-    private float[] mMatrices = new float[INITIAL_RESTORE_STATE_SIZE * MATRIX_SIZE];
-    private float[] mAlphas = new float[INITIAL_RESTORE_STATE_SIZE];
-    private IntArray mSaveFlags = new IntArray();
-
-    private int mCurrentAlphaIndex = 0;
-    private int mCurrentMatrixIndex = 0;
-
-    // Viewport size
-    private int mWidth;
-    private int mHeight;
-
-    // Projection matrix
-    private float[] mProjectionMatrix = new float[MATRIX_SIZE];
-
-    // Screen size for when we aren't bound to a secondBitmap
-    private int mScreenWidth;
-    private int mScreenHeight;
-
-    // GL programs
-    private int mDrawProgram;
-    private int mTextureProgram;
-    private int mOesTextureProgram;
-    private int mMeshProgram;
-
-    // GL buffer containing BOX_COORDINATES
-    private int mBoxCoordinates;
-
     // Handle indices -- common
     private static final int INDEX_POSITION = 0;
     private static final int INDEX_MATRIX = 1;
-
     // Handle indices -- draw
     private static final int INDEX_COLOR = 2;
-
     // Handle indices -- secondBitmap
     private static final int INDEX_TEXTURE_MATRIX = 2;
     private static final int INDEX_TEXTURE_SAMPLER = 3;
     private static final int INDEX_ALPHA = 4;
-
     // Handle indices -- mesh
     private static final int INDEX_TEXTURE_COORD = 2;
-
-
-    private TextureFilter mTextureFilter;
-    private DrawShapeFilter mDrawShapeFilter;
-
-    private OnPreDrawTextureListener onPreDrawTextureListener;
-    private OnPreDrawShapeListener onPreDrawShapeListener;
-
-    private abstract static class ShaderParameter {
-        public int handle;
-        protected final String mName;
-
-        public ShaderParameter(String name) {
-            mName = name;
-        }
-
-        public abstract void loadHandle(int program);
-    }
-
-    private static class UniformShaderParameter extends ShaderParameter {
-        public UniformShaderParameter(String name) {
-            super(name);
-        }
-
-        @Override
-        public void loadHandle(int program) {
-            handle = GLES20.glGetUniformLocation(program, mName);
-            checkError();
-        }
-    }
-
-    private static class AttributeShaderParameter extends ShaderParameter {
-        public AttributeShaderParameter(String name) {
-            super(name);
-        }
-
-        @Override
-        public void loadHandle(int program) {
-            handle = GLES20.glGetAttribLocation(program, mName);
-            checkError();
-        }
-    }
-
+    private static final GLId mGLId = new GLES20IdImpl();
+    private final IntArray mUnboundTextures = new IntArray();
+    private final IntArray mDeleteBuffers = new IntArray();
+    // Temporary variables used within calculations
+    private final float[] mTempMatrix = new float[32];
+    private final float[] mTempColor = new float[4];
+    private final RectF mTempSourceRect = new RectF();
+    private final RectF mTempTargetRect = new RectF();
+    private final float[] mTempTextureMatrix = new float[MATRIX_SIZE];
+    private final int[] mTempIntArray = new int[1];
     ShaderParameter[] mDrawParameters = {
             new AttributeShaderParameter(POSITION_ATTRIBUTE), // INDEX_POSITION
             new UniformShaderParameter(MATRIX_UNIFORM), // INDEX_MATRIX
@@ -219,33 +143,44 @@ public class GLES20Canvas implements GLCanvas {
             new UniformShaderParameter(TEXTURE_SAMPLER_UNIFORM), // INDEX_TEXTURE_SAMPLER
             new UniformShaderParameter(ALPHA_UNIFORM), // INDEX_ALPHA
     };
-
-    private final IntArray mUnboundTextures = new IntArray();
-    private final IntArray mDeleteBuffers = new IntArray();
-
+    private Map<DrawShapeFilter, Integer> mDrawShapeFilterMapProgramId = new HashMap<>();
+    private Map<TextureFilter, Integer> mTextureFilterMapProgramId = new HashMap<>();
+    private Map<TextureFilter, Integer> mOESTextureFilterMapProgramId = new HashMap<>();
+    // Keep track of restore state
+    private float[] mMatrices = new float[INITIAL_RESTORE_STATE_SIZE * MATRIX_SIZE];
+    private float[] mAlphas = new float[INITIAL_RESTORE_STATE_SIZE];
+    private IntArray mSaveFlags = new IntArray();
+    private int mCurrentAlphaIndex = 0;
+    private int mCurrentMatrixIndex = 0;
+    // Viewport size
+    private int mWidth;
+    private int mHeight;
+    // Projection matrix
+    private float[] mProjectionMatrix = new float[MATRIX_SIZE];
+    // Screen size for when we aren't bound to a secondBitmap
+    private int mScreenWidth;
+    private int mScreenHeight;
+    // GL programs
+    private int mDrawProgram;
+    private int mTextureProgram;
+    private int mOesTextureProgram;
+    private int mMeshProgram;
+    // GL buffer containing BOX_COORDINATES
+    private int mBoxCoordinates;
+    private TextureFilter mTextureFilter;
+    private DrawShapeFilter mDrawShapeFilter;
+    private OnPreDrawTextureListener onPreDrawTextureListener;
+    private OnPreDrawShapeListener onPreDrawShapeListener;
     // Keep track of statistics for debugging
     private int mCountDrawMesh = 0;
     private int mCountTextureRect = 0;
     private int mCountFillRect = 0;
     private int mCountDrawLine = 0;
-
     // Buffer for framebuffer IDs -- we keep track so we can switch the attached
     // secondBitmap.
     private int[] mFrameBuffer = new int[1];
-
     // Bound textures.
     private ArrayList<RawTexture> mTargetTextures = new ArrayList<RawTexture>();
-
-    // Temporary variables used within calculations
-    private final float[] mTempMatrix = new float[32];
-    private final float[] mTempColor = new float[4];
-    private final RectF mTempSourceRect = new RectF();
-    private final RectF mTempTargetRect = new RectF();
-    private final float[] mTempTextureMatrix = new float[MATRIX_SIZE];
-    private final int[] mTempIntArray = new int[1];
-
-    private static final GLId mGLId = new GLES20IdImpl();
-
     public GLES20Canvas() {
         Matrix.setIdentityM(mTempTextureMatrix, 0);
         Matrix.setIdentityM(mMatrices, mCurrentMatrixIndex);
@@ -266,10 +201,6 @@ public class GLES20Canvas implements GLCanvas {
         checkError();
     }
 
-    private void setupMeshProgram(int meshVertexShader, int textureFragmentShader) {
-        mMeshProgram = assembleProgram(meshVertexShader, textureFragmentShader, mMeshParameters, mTempIntArray);
-    }
-
     private static FloatBuffer createBuffer(float[] values) {
         // First create an nio buffer, then create a VBO from it.
         int size = values.length * FLOAT_SIZE;
@@ -278,7 +209,6 @@ public class GLES20Canvas implements GLCanvas {
         buffer.put(values, 0, values.length).position(0);
         return buffer;
     }
-
 
     private static int assembleProgram(int vertexShader, int fragmentShader, ShaderParameter[] params, int[] linkStatus) {
         int program = GLES20.glCreateProgram();
@@ -321,6 +251,108 @@ public class GLES20Canvas implements GLCanvas {
         checkError();
 
         return shader;
+    }
+
+    private static void enableBlending(boolean enableBlending) {
+        if (enableBlending) {
+            GLES20.glEnable(GLES20.GL_BLEND);
+            checkError();
+        } else {
+            GLES20.glDisable(GLES20.GL_BLEND);
+            checkError();
+        }
+    }
+
+    private static void changeTargetIfNeeded(RectF source, RectF target, BasicTexture texture) {
+        float yBound = (float) texture.getHeight() / texture.getTextureHeight();
+        float xBound = (float) texture.getWidth() / texture.getTextureWidth();
+        if (source.right > xBound) {
+            target.right = target.left + target.width() * (xBound - source.left) / source.width();
+        }
+        if (source.bottom > yBound) {
+            target.bottom = target.top + target.height() * (yBound - source.top) / source.height();
+        }
+    }
+
+    private static void checkFramebufferStatus() {
+        int status = GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER);
+        if (status != GLES20.GL_FRAMEBUFFER_COMPLETE) {
+            String msg = "";
+            switch (status) {
+                case GLES20.GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                    msg = "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT";
+                    break;
+                case GLES20.GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+                    msg = "GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS";
+                    break;
+                case GLES20.GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                    msg = "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";
+                    break;
+                case GLES20.GL_FRAMEBUFFER_UNSUPPORTED:
+                    msg = "GL_FRAMEBUFFER_UNSUPPORTED";
+                    break;
+            }
+            throw new RuntimeException(msg + ":" + Integer.toHexString(status));
+        }
+    }
+
+    private static void checkFramebufferStatusOes() {
+        int status = GLES11Ext.glCheckFramebufferStatusOES(GLES11Ext.GL_FRAMEBUFFER_OES);
+        if (status != GLES11Ext.GL_FRAMEBUFFER_COMPLETE_OES) {
+            String msg = "";
+            switch (status) {
+                case GLES11Ext.GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_OES:
+                    msg = "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT";
+                    break;
+                case GLES11Ext.GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_OES:
+                    msg = "GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS";
+                    break;
+                case GLES11Ext.GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_OES:
+                    msg = "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";
+                    break;
+                case GLES11Ext.GL_FRAMEBUFFER_UNSUPPORTED_OES:
+                    msg = "GL_FRAMEBUFFER_UNSUPPORTED";
+                    break;
+            }
+            throw new RuntimeException(msg + ":" + Integer.toHexString(status));
+        }
+    }
+
+    public static void checkError() {
+        int error = GLES20.glGetError();
+        if (error != 0) {
+            Throwable t = new Throwable();
+            Log.e(TAG, "GL error: " + error, t);
+        }
+    }
+
+    @SuppressWarnings("unused")
+    public static void printMatrix(String message, float[] m, int offset) {
+        if (!Loggers.DEBUG) {
+            return;
+        }
+        StringBuilder b = new StringBuilder(message);
+        b.append('\n');
+        int size = 4;
+        for (int i = 0; i < size; i++) {
+            String format = "%.6f";
+            b.append(String.format(format, m[offset + i]));
+            b.append(", ");
+            b.append(String.format(format, m[offset + 4 + i]));
+            b.append(", ");
+            b.append(String.format(format, m[offset + 8 + i]));
+            b.append(", ");
+            b.append(String.format(format, m[offset + 12 + i]));
+            if (i < size - 1) {
+                b.append(", ");
+            }
+            b.append('\n');
+        }
+        Loggers.v(TAG, b.toString());
+    }
+
+    private void setupMeshProgram(int meshVertexShader, int textureFragmentShader) {
+        mMeshProgram = assembleProgram(meshVertexShader, textureFragmentShader, mMeshParameters, mTempIntArray);
     }
 
     @Override
@@ -374,7 +406,6 @@ public class GLES20Canvas implements GLCanvas {
         Matrix.translateM(mMatrices, mCurrentMatrixIndex, x, y, z);
     }
 
-
     // This is a faster version of translate(x, y, z) because
     // (1) we knows z = 0, (2) we inline the Matrix.translateM call,
     // (3) we unroll the loop
@@ -405,7 +436,6 @@ public class GLES20Canvas implements GLCanvas {
         Matrix.multiplyMM(temp, MATRIX_SIZE, matrix, index, temp, 0);
         System.arraycopy(temp, MATRIX_SIZE, matrix, index, MATRIX_SIZE);
     }
-
 
     @Override
     public void multiplyMatrix(float[] matrix, int offset) {
@@ -460,7 +490,7 @@ public class GLES20Canvas implements GLCanvas {
     @Override
     public void drawCircle(float x, float y, float radius, GLPaint paint, DrawShapeFilter drawShapeFilter) {
         setupDrawShapeFilter(drawShapeFilter);
-        draw(GLES20.GL_TRIANGLE_STRIP, OFFSET_FILL_RECT, COUNT_FILL_VERTEX, x, y, 2*radius, 2*radius, paint.getColor(), 0f);
+        draw(GLES20.GL_TRIANGLE_STRIP, OFFSET_FILL_RECT, COUNT_FILL_VERTEX, x, y, 2 * radius, 2 * radius, paint.getColor(), 0f);
     }
 
     @Override
@@ -519,16 +549,6 @@ public class GLES20Canvas implements GLCanvas {
         mTempColor[2] = blue;
         mTempColor[3] = alpha;
         return mTempColor;
-    }
-
-    private static void enableBlending(boolean enableBlending) {
-        if (enableBlending) {
-            GLES20.glEnable(GLES20.GL_BLEND);
-            checkError();
-        } else {
-            GLES20.glDisable(GLES20.GL_BLEND);
-            checkError();
-        }
     }
 
     private void setPosition(ShaderParameter[] params, int offset) {
@@ -617,17 +637,6 @@ public class GLES20Canvas implements GLCanvas {
     private void drawTextureRect(BasicTexture texture, RectF source, RectF target, ICustomMVPMatrix customMVPMatrix) {
         TextureMatrixTransformer.setTextureMatrix(source, mTempTextureMatrix);
         drawTextureRect(texture, mTempTextureMatrix, target, customMVPMatrix);
-    }
-
-    private static void changeTargetIfNeeded(RectF source, RectF target, BasicTexture texture) {
-        float yBound = (float) texture.getHeight() / texture.getTextureHeight();
-        float xBound = (float) texture.getWidth() / texture.getTextureWidth();
-        if (source.right > xBound) {
-            target.right = target.left + target.width() * (xBound - source.left) / source.width();
-        }
-        if (source.bottom > yBound) {
-            target.bottom = target.top + target.height() * (yBound - source.top) / source.height();
-        }
     }
 
     private void drawTextureRect(BasicTexture texture, float[] textureMatrix, RectF target, ICustomMVPMatrix customMVPMatrix) {
@@ -870,51 +879,6 @@ public class GLES20Canvas implements GLCanvas {
         }
     }
 
-    private static void checkFramebufferStatus() {
-        int status = GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER);
-        if (status != GLES20.GL_FRAMEBUFFER_COMPLETE) {
-            String msg = "";
-            switch (status) {
-                case GLES20.GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-                    msg = "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT";
-                    break;
-                case GLES20.GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-                    msg = "GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS";
-                    break;
-                case GLES20.GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-                    msg = "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";
-                    break;
-                case GLES20.GL_FRAMEBUFFER_UNSUPPORTED:
-                    msg = "GL_FRAMEBUFFER_UNSUPPORTED";
-                    break;
-            }
-            throw new RuntimeException(msg + ":" + Integer.toHexString(status));
-        }
-    }
-
-
-    private static void checkFramebufferStatusOes() {
-        int status = GLES11Ext.glCheckFramebufferStatusOES(GLES11Ext.GL_FRAMEBUFFER_OES);
-        if (status != GLES11Ext.GL_FRAMEBUFFER_COMPLETE_OES) {
-            String msg = "";
-            switch (status) {
-                case GLES11Ext.GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_OES:
-                    msg = "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT";
-                    break;
-                case GLES11Ext.GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_OES:
-                    msg = "GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS";
-                    break;
-                case GLES11Ext.GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_OES:
-                    msg = "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";
-                    break;
-                case GLES11Ext.GL_FRAMEBUFFER_UNSUPPORTED_OES:
-                    msg = "GL_FRAMEBUFFER_UNSUPPORTED";
-                    break;
-            }
-            throw new RuntimeException(msg + ":" + Integer.toHexString(status));
-        }
-    }
-
     @Override
     public void setTextureParameters(BasicTexture texture) {
         int target = texture.getTarget();
@@ -975,42 +939,9 @@ public class GLES20Canvas implements GLCanvas {
         return bufferId;
     }
 
-    public static void checkError() {
-        int error = GLES20.glGetError();
-        if (error != 0) {
-            Throwable t = new Throwable();
-            Log.e(TAG, "GL error: " + error, t);
-        }
-    }
-
-    @SuppressWarnings("unused")
-    public static void printMatrix(String message, float[] m, int offset) {
-        if (!Loggers.DEBUG) {
-            return;
-        }
-        StringBuilder b = new StringBuilder(message);
-        b.append('\n');
-        int size = 4;
-        for (int i = 0; i < size; i++) {
-            String format = "%.6f";
-            b.append(String.format(format, m[offset + i]));
-            b.append(", ");
-            b.append(String.format(format, m[offset + 4+i]));
-            b.append(", ");
-            b.append(String.format(format, m[offset + 8+i]));
-            b.append(", ");
-            b.append(String.format(format, m[offset + 12+i]));
-            if (i<size-1) {
-                b.append(", ");
-            }
-            b.append('\n');
-        }
-        Loggers.v(TAG, b.toString());
-    }
-
     @Override
     public void recoverFromLightCycle() {
-        // FIXME: 2017/8/20 
+        // FIXME: 2017/8/20
 //        GLES20.glViewport(0, 0, mWidth, mHeight);
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
@@ -1081,16 +1012,49 @@ public class GLES20Canvas implements GLCanvas {
         return assembleProgram(vertexShaderHandle, fragmentShaderHandle, shaderParameters, mTempIntArray);
     }
 
-
     @Override
     public void setOnPreDrawTextureListener(OnPreDrawTextureListener l) {
         this.onPreDrawTextureListener = l;
     }
 
-
     @Override
     public void setOnPreDrawShapeListener(OnPreDrawShapeListener l) {
         this.onPreDrawShapeListener = l;
+    }
+
+    private abstract static class ShaderParameter {
+        protected final String mName;
+        public int handle;
+
+        public ShaderParameter(String name) {
+            mName = name;
+        }
+
+        public abstract void loadHandle(int program);
+    }
+
+    private static class UniformShaderParameter extends ShaderParameter {
+        public UniformShaderParameter(String name) {
+            super(name);
+        }
+
+        @Override
+        public void loadHandle(int program) {
+            handle = GLES20.glGetUniformLocation(program, mName);
+            checkError();
+        }
+    }
+
+    private static class AttributeShaderParameter extends ShaderParameter {
+        public AttributeShaderParameter(String name) {
+            super(name);
+        }
+
+        @Override
+        public void loadHandle(int program) {
+            handle = GLES20.glGetAttribLocation(program, mName);
+            checkError();
+        }
     }
 
 }

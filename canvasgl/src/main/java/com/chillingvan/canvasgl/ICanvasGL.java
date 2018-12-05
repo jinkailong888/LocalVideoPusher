@@ -142,6 +142,7 @@ public interface ICanvasGL {
 
         /**
          * Should not be larger than 2 * GLES20.GL_MAX_VIEWPORT_DIMS
+         *
          * @param sx
          * @param sy
          */
@@ -174,10 +175,10 @@ public interface ICanvasGL {
             // Move view port to make sure the picture in the center of the view port.
             final float absTransX = Math.abs(transform[TRANSLATE_X]); // Make sure viewportX + realViewportW >= viewportW
             final float absTransY = Math.abs(transform[TRANSLATE_Y]); // Make sure realViewportH - viewportY >= viewportH
-            int viewportX = (int) (drawW / 2 - (((float)viewPortRatio/2)) * viewportW + transform[TRANSLATE_X] - absTransX);
-            int viewportY = (int) -((drawH / 2 + transform[TRANSLATE_Y] + absTransY) + ((float)viewPortRatio-2)/2 * viewportH);//The origin is (0,h)
-            final int realViewportW = (int) (viewPortRatio * viewportW + 2*absTransX);
-            final int realViewportH = (int) (viewPortRatio * viewportH + 2*absTransY);
+            int viewportX = (int) (drawW / 2 - (((float) viewPortRatio / 2)) * viewportW + transform[TRANSLATE_X] - absTransX);
+            int viewportY = (int) -((drawH / 2 + transform[TRANSLATE_Y] + absTransY) + ((float) viewPortRatio - 2) / 2 * viewportH);//The origin is (0,h)
+            final int realViewportW = (int) (viewPortRatio * viewportW + 2 * absTransX);
+            final int realViewportH = (int) (viewPortRatio * viewportH + 2 * absTransY);
             GLES20.glViewport(viewportX, viewportY, realViewportW, realViewportH);
 
             Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, NEAR, FAR);
@@ -203,7 +204,7 @@ public interface ICanvasGL {
             float realW = ratio * drawW / viewportW * Z_RATIO * 2 / 2;
             float realH = drawH / viewportH * Z_RATIO * 2 / 2;
             // Need to middle X, Y of the plane, too. The middle of the plane is (0, 0, -Z_RATIO + EYEZ)
-            Matrix.translateM(tempMultiplyMatrix4, 0, mModelMatrix, 0, -realW/2, -realH/2, -Z_RATIO + EYEZ);
+            Matrix.translateM(tempMultiplyMatrix4, 0, mModelMatrix, 0, -realW / 2, -realH / 2, -Z_RATIO + EYEZ);
             GLES20Canvas.printMatrix("model translated:", tempMultiplyMatrix4, 0);
 
 
@@ -217,7 +218,6 @@ public interface ICanvasGL {
         }
 
     }
-
 
 
     /**
@@ -264,11 +264,11 @@ public interface ICanvasGL {
 
 
             final float transX = transform[TRANSLATE_X] / viewportW;
-            final float transY = transform[TRANSLATE_Y] / viewportH -1;
+            final float transY = transform[TRANSLATE_Y] / viewportH - 1;
             Matrix.translateM(tempMultiplyMatrix4, 0, mModelMatrix, 0, transX, transY, 0);
             GLES20Canvas.printMatrix("model translated:", tempMultiplyMatrix4, 0);
 
-            Matrix.scaleM(tempMultiplyMatrix4, 0, transform[SCALE_X] * drawW/viewportW * ratio, transform[SCALE_Y] * drawH/viewportH, 1);
+            Matrix.scaleM(tempMultiplyMatrix4, 0, transform[SCALE_X] * drawW / viewportW * ratio, transform[SCALE_Y] * drawH / viewportH, 1);
             GLES20Canvas.printMatrix("model scaled:", tempMultiplyMatrix4, 0);
 
 

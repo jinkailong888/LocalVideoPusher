@@ -2,7 +2,7 @@ package com.chillingvan.canvasgl.matrix;
 
 /**
  * Created by Chilling on 2018/11/17.
- *
+ * <p>
  * The output is MVP matrix of OpenGL, which is used to calculate gl_position.
  * gl_position = MVP * [x,y,z,w]
  */

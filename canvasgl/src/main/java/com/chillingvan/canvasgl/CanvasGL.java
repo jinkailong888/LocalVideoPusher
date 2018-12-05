@@ -55,9 +55,9 @@ import java.util.WeakHashMap;
  */
 public class CanvasGL implements ICanvasGL {
 
-    private Map<Bitmap, BasicTexture> bitmapTextureMap = new WeakHashMap<>();
     protected final GLCanvas glCanvas;
     protected final BasicTextureFilter basicTextureFilter;
+    private Map<Bitmap, BasicTexture> bitmapTextureMap = new WeakHashMap<>();
     private float[] canvasBackgroundColor;
     private float[] surfaceTextureMatrix = new float[16];
     private int width;
@@ -227,7 +227,7 @@ public class CanvasGL implements ICanvasGL {
         if (paint.getStyle() == Paint.Style.FILL) {
             drawCircleFilter.setLineWidth(0.5f);
         } else {
-            drawCircleFilter.setLineWidth(paint.getLineWidth() / (2*radius));
+            drawCircleFilter.setLineWidth(paint.getLineWidth() / (2 * radius));
         }
         glCanvas.drawCircle(x - radius, y - radius, radius, paint, drawCircleFilter);
     }
@@ -340,7 +340,7 @@ public class CanvasGL implements ICanvasGL {
 
     @Override
     public void setAlpha(@IntRange(from = 0, to = 255) int alpha) {
-        glCanvas.setAlpha(alpha/(float)255);
+        glCanvas.setAlpha(alpha / (float) 255);
     }
 
     @Override

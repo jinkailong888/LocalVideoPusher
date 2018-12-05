@@ -30,12 +30,16 @@ public class GLPaint {
     private int mColor = Color.WHITE;
     private Paint.Style style = Paint.Style.FILL;
 
+    public int getColor() {
+        return mColor;
+    }
+
     public void setColor(int color) {
         mColor = color;
     }
 
-    public int getColor() {
-        return mColor;
+    public float getLineWidth() {
+        return mLineWidth;
     }
 
     public void setLineWidth(float width) {
@@ -43,15 +47,11 @@ public class GLPaint {
         mLineWidth = width;
     }
 
-    public float getLineWidth() {
-        return mLineWidth;
+    public Paint.Style getStyle() {
+        return style;
     }
 
     public void setStyle(Paint.Style style) {
         this.style = style;
-    }
-
-    public Paint.Style getStyle() {
-        return style;
     }
 }

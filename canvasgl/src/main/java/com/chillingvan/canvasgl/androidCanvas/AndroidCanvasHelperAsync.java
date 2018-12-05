@@ -10,7 +10,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by Chilling on 2018/4/14.
- *
+ * <p>
  * Draw text in another thread.
  * 这个类会另起一个线程，但会创建双份Bitmap，比较耗内存。
  */
