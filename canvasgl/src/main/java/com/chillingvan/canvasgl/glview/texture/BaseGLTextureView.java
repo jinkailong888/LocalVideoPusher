@@ -28,9 +28,9 @@ import android.util.Log;
 import android.view.TextureView;
 
 import com.chillingvan.canvasgl.ICanvasGL;
-import com.chillingvan.canvasgl.util.Loggers;
 import com.chillingvan.canvasgl.glview.texture.gles.EglContextWrapper;
 import com.chillingvan.canvasgl.glview.texture.gles.GLThread;
+import com.chillingvan.canvasgl.util.Loggers;
 
 import java.util.ArrayList;
 import java.util.List;

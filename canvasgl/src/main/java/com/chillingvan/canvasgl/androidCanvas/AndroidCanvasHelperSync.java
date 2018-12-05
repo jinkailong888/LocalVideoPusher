@@ -2,9 +2,10 @@ package com.chillingvan.canvasgl.androidCanvas;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+
 /**
  * Created by Chilling on 2018/4/14.
- *
+ * <p>
  * This will use a bitmap and draw in the thread you use.
  * 这个类不会另起一个线程。
  */

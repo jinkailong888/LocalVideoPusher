@@ -25,20 +25,18 @@ import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.egl.EGLSurface;
+
 /**
  * OffScreenCanvas that support providing multiple textures to Camera or Media.
  * This can also consume textures from other GL zone( Should be in same GL context)
  */
 public abstract class MultiTexOffScreenCanvas implements GLViewRenderer {
-    private List<GLTexture> producedTextureList = new ArrayList<>();
-    protected List<GLTexture> consumedTextures = new ArrayList<>();
-
     protected final GLThread mGLThread;
+    protected List<GLTexture> consumedTextures = new ArrayList<>();
     protected int width;
     protected int height;
     protected ICanvasGL mCanvas;
-
-
+    private List<GLTexture> producedTextureList = new ArrayList<>();
     private GLMultiTexProducerView.SurfaceTextureCreatedListener surfaceTextureCreatedListener;
 
     private Handler handler;
@@ -85,7 +83,6 @@ public abstract class MultiTexOffScreenCanvas implements GLViewRenderer {
     }
 
     /**
-     *
      * @param glTexture texture from outSide.
      */
     public void addConsumeGLTexture(GLTexture glTexture) {
@@ -103,6 +100,7 @@ public abstract class MultiTexOffScreenCanvas implements GLViewRenderer {
 
     /**
      * If it is used, it must be called before start() called.
+     *
      * @param producedTextureTarget GLES20.GL_TEXTURE_2D or GLES11Ext.GL_TEXTURE_EXTERNAL_OES
      */
     public void setProducedTextureTarget(int producedTextureTarget) {
@@ -143,13 +141,13 @@ public abstract class MultiTexOffScreenCanvas implements GLViewRenderer {
     }
 
     public void onResume() {
-        if(mGLThread != null) {
+        if (mGLThread != null) {
             mGLThread.onResume();
         }
     }
 
     public void onPause() {
-        if(mGLThread != null) {
+        if (mGLThread != null) {
             mGLThread.onPause();
         }
         recycleProduceTexture();
@@ -187,48 +185,12 @@ public abstract class MultiTexOffScreenCanvas implements GLViewRenderer {
         }
     }
 
-    private class SurfaceFactory implements GLThread.EGLWindowSurfaceFactory {
-        @Override
-        public EGLSurface createWindowSurface(EGL10 egl, EGLDisplay display, EGLConfig config, Object nativeWindow) {
-            int[] attribList = new int[]{
-                    EGL10.EGL_WIDTH, width,
-                    EGL10.EGL_HEIGHT, height,
-                    EGL10.EGL_NONE
-            };
-            return egl.eglCreatePbufferSurface(display, config, attribList);
-        }
-
-        @Override
-        public void destroySurface(EGL10 egl, EGLDisplay display, EGLSurface surface) {
-            egl.eglDestroySurface(display, surface);
-        }
-
-        @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-        @Override
-        public android.opengl.EGLSurface createWindowSurface(android.opengl.EGLDisplay display, android.opengl.EGLConfig config, Object nativeWindow) {
-            int[] attribList = new int[]{
-                    EGL14.EGL_WIDTH, width,
-                    EGL14.EGL_HEIGHT, height,
-                    EGL14.EGL_NONE
-            };
-            return EGL14.eglCreatePbufferSurface(display, config, attribList, 0);
-        }
-
-        @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-        @Override
-        public void destroySurface(android.opengl.EGLDisplay display, android.opengl.EGLSurface surface) {
-            EGL14.eglDestroySurface(display, surface);
-        }
-    }
-
     /**
-     *
      * @return The initial produced texture count
      */
     protected int getInitialTexCount() {
         return 1;
     }
-
 
     @Override
     public void onSurfaceCreated() {
@@ -260,7 +222,6 @@ public abstract class MultiTexOffScreenCanvas implements GLViewRenderer {
         }
     }
 
-
     @Override
     public void onDrawFrame() {
         mCanvas.clearBuffer(backgroundColor);
@@ -271,7 +232,6 @@ public abstract class MultiTexOffScreenCanvas implements GLViewRenderer {
         }
         onGLDraw(mCanvas, producedTextureList, consumedTextures);
     }
-
 
     protected int getRenderMode() {
         return GLThread.RENDERMODE_WHEN_DIRTY;
@@ -316,5 +276,39 @@ public abstract class MultiTexOffScreenCanvas implements GLViewRenderer {
             }
         });
         requestRender();
+    }
+
+    private class SurfaceFactory implements GLThread.EGLWindowSurfaceFactory {
+        @Override
+        public EGLSurface createWindowSurface(EGL10 egl, EGLDisplay display, EGLConfig config, Object nativeWindow) {
+            int[] attribList = new int[]{
+                    EGL10.EGL_WIDTH, width,
+                    EGL10.EGL_HEIGHT, height,
+                    EGL10.EGL_NONE
+            };
+            return egl.eglCreatePbufferSurface(display, config, attribList);
+        }
+
+        @Override
+        public void destroySurface(EGL10 egl, EGLDisplay display, EGLSurface surface) {
+            egl.eglDestroySurface(display, surface);
+        }
+
+        @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
+        @Override
+        public android.opengl.EGLSurface createWindowSurface(android.opengl.EGLDisplay display, android.opengl.EGLConfig config, Object nativeWindow) {
+            int[] attribList = new int[]{
+                    EGL14.EGL_WIDTH, width,
+                    EGL14.EGL_HEIGHT, height,
+                    EGL14.EGL_NONE
+            };
+            return EGL14.eglCreatePbufferSurface(display, config, attribList, 0);
+        }
+
+        @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
+        @Override
+        public void destroySurface(android.opengl.EGLDisplay display, android.opengl.EGLSurface surface) {
+            EGL14.eglDestroySurface(display, surface);
+        }
     }
 }

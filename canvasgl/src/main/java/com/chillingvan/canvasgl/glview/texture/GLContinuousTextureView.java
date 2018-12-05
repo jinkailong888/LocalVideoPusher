@@ -27,7 +27,7 @@ import com.chillingvan.canvasgl.glview.texture.gles.GLThread;
 
 /**
  * Created by Chilling on 2016/11/1.
- *
+ * <p>
  * {@link com.chillingvan.canvasgl.glview.GLContinuousView} is better.
  */
 

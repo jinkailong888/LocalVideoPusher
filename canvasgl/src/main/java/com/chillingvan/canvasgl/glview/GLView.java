@@ -42,9 +42,8 @@ public abstract class GLView extends GLSurfaceView implements GLSurfaceView.Rend
 
 
     protected CanvasGL mCanvas;
-
-    private OnSizeChangeCallback onSizeChangeCallback;
     protected GL10 gl;
+    private OnSizeChangeCallback onSizeChangeCallback;
 
     public GLView(Context context) {
         super(context);
@@ -120,11 +119,6 @@ public abstract class GLView extends GLSurfaceView implements GLSurfaceView.Rend
         }
     }
 
-    public interface OnSizeChangeCallback {
-        void onSizeChange(int w, int h, int oldw, int oldh);
-    }
-
-
     public void getDrawingBitmap(final Rect rect, final GetDrawingCacheCallback getDrawingCacheCallback) {
 
         queueEvent(new Runnable() {
@@ -146,6 +140,11 @@ public abstract class GLView extends GLSurfaceView implements GLSurfaceView.Rend
             }
         });
         requestRender();
+    }
+
+
+    public interface OnSizeChangeCallback {
+        void onSizeChange(int w, int h, int oldw, int oldh);
     }
 
     public interface GetDrawingCacheCallback {

@@ -49,19 +49,19 @@ public abstract class TwoTextureFilter extends BasicTextureFilter {
 
     private static final String VERTEX_SHADER =
             " \n" +
-            "attribute vec2 " + POSITION_ATTRIBUTE + ";\n" +
-            "varying vec2 " + VARYING_TEXTURE_COORD + ";\n" +
-            "varying vec2 " + VARYING_TEXTURE_COORD2 + ";\n" +
-            "uniform mat4 " + MATRIX_UNIFORM + ";\n" +
-            "uniform mat4 " + TEXTURE_MATRIX_UNIFORM + ";\n" +
-            "uniform mat4 " + TEXTURE_MATRIX_UNIFORM2 + ";\n" +
-            " \n" +
-            "void main() {\n" +
-            "  vec4 pos = vec4(" + POSITION_ATTRIBUTE + ", 0.0, 1.0);\n" +
-            "    gl_Position = " + MATRIX_UNIFORM + " * pos;\n" +
-            "    " + VARYING_TEXTURE_COORD + " = (" + TEXTURE_MATRIX_UNIFORM + " * pos).xy;\n" +
-            "    " + VARYING_TEXTURE_COORD2 + " = (" + TEXTURE_MATRIX_UNIFORM2 + " * pos).xy;\n" +
-            "}";
+                    "attribute vec2 " + POSITION_ATTRIBUTE + ";\n" +
+                    "varying vec2 " + VARYING_TEXTURE_COORD + ";\n" +
+                    "varying vec2 " + VARYING_TEXTURE_COORD2 + ";\n" +
+                    "uniform mat4 " + MATRIX_UNIFORM + ";\n" +
+                    "uniform mat4 " + TEXTURE_MATRIX_UNIFORM + ";\n" +
+                    "uniform mat4 " + TEXTURE_MATRIX_UNIFORM2 + ";\n" +
+                    " \n" +
+                    "void main() {\n" +
+                    "  vec4 pos = vec4(" + POSITION_ATTRIBUTE + ", 0.0, 1.0);\n" +
+                    "    gl_Position = " + MATRIX_UNIFORM + " * pos;\n" +
+                    "    " + VARYING_TEXTURE_COORD + " = (" + TEXTURE_MATRIX_UNIFORM + " * pos).xy;\n" +
+                    "    " + VARYING_TEXTURE_COORD2 + " = (" + TEXTURE_MATRIX_UNIFORM2 + " * pos).xy;\n" +
+                    "}";
 
     protected final float[] mTempTextureMatrix = new float[MATRIX_SIZE];
     protected Bitmap secondBitmap;

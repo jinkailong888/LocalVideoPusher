@@ -61,8 +61,8 @@ public abstract class TextureSampling3mul3Filter extends BasicTextureFilter impl
             "varying vec2 " + VARYING_BOTTOM_LEFT_TEXTURE_COORDINATE + ";\n" +
             "varying vec2 " + VARYING_BOTTOM_RIGHT_TEXTURE_COORDINATE + ";\n" +
             "\n" +
-            "uniform mat4 " + MATRIX_UNIFORM + ";\n" + "uniform mat4 " + TEXTURE_MATRIX_UNIFORM + ";\n" +             "void main() {\n" +
-            "  vec4 pos = vec4(" + POSITION_ATTRIBUTE + ", 0.0, 1.0);\n" +             "" +
+            "uniform mat4 " + MATRIX_UNIFORM + ";\n" + "uniform mat4 " + TEXTURE_MATRIX_UNIFORM + ";\n" + "void main() {\n" +
+            "  vec4 pos = vec4(" + POSITION_ATTRIBUTE + ", 0.0, 1.0);\n" + "" +
             "    gl_Position = " + MATRIX_UNIFORM + " * pos;\n" +
             "\n" +
             "    vec2 widthStep = vec2(" + UNIFORM_TEXEL_WIDTH + ", 0.0);\n" +

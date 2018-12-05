@@ -59,7 +59,6 @@ public abstract class GLMultiTexConsumerView extends BaseGLCanvasTextureView {
 
 
     /**
-     *
      * @param glTexture texture from outSide.
      */
     public void addConsumeGLTexture(GLTexture glTexture) {
@@ -67,7 +66,6 @@ public abstract class GLMultiTexConsumerView extends BaseGLCanvasTextureView {
     }
 
     /**
-     *
      * Will not call until @param surfaceTexture not null
      */
     protected abstract void onGLDraw(ICanvasGL canvas, List<GLTexture> consumedTextures);
@@ -76,7 +74,7 @@ public abstract class GLMultiTexConsumerView extends BaseGLCanvasTextureView {
     protected final void onGLDraw(ICanvasGL canvas) {
         Iterator<GLTexture> iterator = consumedTextures.iterator();
         while (iterator.hasNext()) {
-            GLTexture next =  iterator.next();
+            GLTexture next = iterator.next();
             if (next.getRawTexture().isRecycled()) {
                 iterator.remove();
             }

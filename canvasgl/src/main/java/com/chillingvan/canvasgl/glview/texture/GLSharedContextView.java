@@ -33,6 +33,7 @@ import java.util.List;
 
 /**
  * This class is used to accept eglContext and texture from outside. Then it can use them to draw.
+ *
  * @deprecated Use {@link GLMultiTexConsumerView} instead.
  */
 public abstract class GLSharedContextView extends GLMultiTexConsumerView {
@@ -62,7 +63,6 @@ public abstract class GLSharedContextView extends GLMultiTexConsumerView {
     }
 
     /**
-     *
      * Will not call until @param surfaceTexture not null
      */
     protected abstract void onGLDraw(ICanvasGL canvas, @Nullable SurfaceTexture sharedSurfaceTexture, BasicTexture sharedTexture);

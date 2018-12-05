@@ -35,9 +35,9 @@ import java.util.List;
 public class FilterGroup extends BasicTextureFilter {
 
 
+    private final List<RawTexture> rawTextureList = new ArrayList<>();
     protected List<TextureFilter> mFilters;
     protected List<TextureFilter> mMergedFilters;
-    private final List<RawTexture> rawTextureList = new ArrayList<>();
     private BasicTexture outputTexture;
     private BasicTexture initialTexture;
 

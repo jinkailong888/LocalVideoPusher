@@ -77,10 +77,6 @@ public abstract class GLSurfaceTextureProducerView extends GLMultiTexProducerVie
         });
     }
 
-    public interface OnSurfaceTextureSet {
-        void onSet(SurfaceTexture surfaceTexture, RawTexture surfaceTextureRelatedTexture);
-    }
-
     @Override
     protected final void onGLDraw(ICanvasGL canvas, List<GLTexture> producedTextures, List<GLTexture> consumedTextures) {
         GLTexture glTexture = producedTextures.get(0);
@@ -93,5 +89,9 @@ public abstract class GLSurfaceTextureProducerView extends GLMultiTexProducerVie
     }
 
     protected abstract void onGLDraw(ICanvasGL canvas, SurfaceTexture producedSurfaceTexture, RawTexture producedRawTexture, @Nullable SurfaceTexture outsideSurfaceTexture, @Nullable BasicTexture outsideTexture);
+
+    public interface OnSurfaceTextureSet {
+        void onSet(SurfaceTexture surfaceTexture, RawTexture surfaceTextureRelatedTexture);
+    }
 
 }

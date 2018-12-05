@@ -37,7 +37,7 @@ import com.chillingvan.canvasgl.glcanvas.BasicTexture;
  * <br>
  * contrast value ranges from 0.0 to 4.0, with 1.0 as the normal level
  */
-public class ContrastFilter extends BasicTextureFilter implements OneValueFilter{
+public class ContrastFilter extends BasicTextureFilter implements OneValueFilter {
 
     public static final String UNIFORM_CONTRAST = "contrast";
     public static final String CONTRAST_FRAGMENT_SHADER = ""

@@ -46,24 +46,21 @@ import javax.microedition.khronos.opengles.GL11;
 // blending). The user or subclass can override it using setOpaque().
 public abstract class UploadedTexture extends BasicTexture {
 
+    @SuppressWarnings("unused")
+    private static final String TAG = "Texture";
+    private static final int UPLOAD_LIMIT = 100;
     // To prevent keeping allocation the borders, we store those used borders here.
     // Since the length will be power of two, it won't use too much memory.
     private static HashMap<BorderKey, Bitmap> sBorderLines =
             new HashMap<BorderKey, Bitmap>();
     private static BorderKey sBorderKey = new BorderKey();
-
-    @SuppressWarnings("unused")
-    private static final String TAG = "Texture";
+    private static int sUploadedCount;
+    protected Bitmap mBitmap;
     private boolean mContentValid = true;
-
     // indicate this textures is being uploaded in background
     private boolean mIsUploading = false;
     private boolean mOpaque = false;
     private boolean mThrottled = false;
-    private static int sUploadedCount;
-    private static final int UPLOAD_LIMIT = 100;
-
-    protected Bitmap mBitmap;
     private int mBorder;
 
     protected UploadedTexture() {
@@ -76,47 +73,6 @@ public abstract class UploadedTexture extends BasicTexture {
             setBorder(true);
             mBorder = 1;
         }
-    }
-
-    protected void setIsUploading(boolean uploading) {
-        mIsUploading = uploading;
-    }
-
-    public boolean isUploading() {
-        return mIsUploading;
-    }
-
-    private static class BorderKey implements Cloneable {
-        public boolean vertical;
-        public Config config;
-        public int length;
-
-        @Override
-        public int hashCode() {
-            int x = config.hashCode() ^ length;
-            return vertical ? x : -x;
-        }
-
-        @Override
-        public boolean equals(Object object) {
-            if (!(object instanceof BorderKey)) return false;
-            BorderKey o = (BorderKey) object;
-            return vertical == o.vertical
-                    && config == o.config && length == o.length;
-        }
-
-        @Override
-        public BorderKey clone() {
-            try {
-                return (BorderKey) super.clone();
-            } catch (CloneNotSupportedException e) {
-                throw new AssertionError(e);
-            }
-        }
-    }
-
-    protected void setThrottled(boolean throttled) {
-        mThrottled = throttled;
     }
 
     private static Bitmap getBorderLine(
@@ -133,6 +89,26 @@ public abstract class UploadedTexture extends BasicTexture {
             sBorderLines.put(key.clone(), bitmap);
         }
         return bitmap;
+    }
+
+    public static void resetUploadLimit() {
+        sUploadedCount = 0;
+    }
+
+    public static boolean uploadLimitReached() {
+        return sUploadedCount > UPLOAD_LIMIT;
+    }
+
+    protected void setIsUploading(boolean uploading) {
+        mIsUploading = uploading;
+    }
+
+    public boolean isUploading() {
+        return mIsUploading;
+    }
+
+    protected void setThrottled(boolean throttled) {
+        mThrottled = throttled;
     }
 
     private Bitmap getBitmap() {
@@ -185,6 +161,7 @@ public abstract class UploadedTexture extends BasicTexture {
 
     /**
      * Updates the content on GPU's memory.
+     *
      * @param canvas
      */
     public void updateContent(GLCanvas canvas) {
@@ -201,14 +178,6 @@ public abstract class UploadedTexture extends BasicTexture {
             freeBitmap();
             mContentValid = true;
         }
-    }
-
-    public static void resetUploadLimit() {
-        sUploadedCount = 0;
-    }
-
-    public static boolean uploadLimitReached() {
-        return sUploadedCount > UPLOAD_LIMIT;
     }
 
     private void uploadToCanvas(GLCanvas canvas) {
@@ -285,18 +254,47 @@ public abstract class UploadedTexture extends BasicTexture {
         return GL11.GL_TEXTURE_2D;
     }
 
-    public void setOpaque(boolean isOpaque) {
-        mOpaque = isOpaque;
-    }
-
     @Override
     public boolean isOpaque() {
         return mOpaque;
+    }
+
+    public void setOpaque(boolean isOpaque) {
+        mOpaque = isOpaque;
     }
 
     @Override
     public void recycle() {
         super.recycle();
         if (mBitmap != null) freeBitmap();
+    }
+
+    private static class BorderKey implements Cloneable {
+        public boolean vertical;
+        public Config config;
+        public int length;
+
+        @Override
+        public int hashCode() {
+            int x = config.hashCode() ^ length;
+            return vertical ? x : -x;
+        }
+
+        @Override
+        public boolean equals(Object object) {
+            if (!(object instanceof BorderKey)) return false;
+            BorderKey o = (BorderKey) object;
+            return vertical == o.vertical
+                    && config == o.config && length == o.length;
+        }
+
+        @Override
+        public BorderKey clone() {
+            try {
+                return (BorderKey) super.clone();
+            } catch (CloneNotSupportedException e) {
+                throw new AssertionError(e);
+            }
+        }
     }
 }

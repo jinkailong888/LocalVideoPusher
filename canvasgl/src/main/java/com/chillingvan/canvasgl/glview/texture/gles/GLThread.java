@@ -48,13 +48,11 @@ import javax.microedition.khronos.opengles.GL;
  * And then draw with OpenGL and finally eglSwap to update the screen.
  */
 public class GLThread extends Thread {
-    private static final String TAG = "GLThread";
     public final static boolean LOG_RENDERER_DRAW_FRAME = false;
     public final static boolean LOG_THREADS = false;
-
     public final static int RENDERMODE_WHEN_DIRTY = 0;
     public final static int RENDERMODE_CONTINUOUSLY = 1;
-
+    private static final String TAG = "GLThread";
     private final GLThreadManager sGLThreadManager = new GLThreadManager();
 
 
@@ -93,6 +91,7 @@ public class GLThread extends Thread {
 
     private ChoreographerRenderWrapper mChoreographerRenderWrapper = new ChoreographerRenderWrapper(this);
     private long frameTimeNanos;
+    private IEglHelper mEglHelper;
 
     GLThread(EGLConfigChooser configChooser, EGLContextFactory eglContextFactory
             , EGLWindowSurfaceFactory eglWindowSurfaceFactory, GLViewRenderer renderer
@@ -133,7 +132,6 @@ public class GLThread extends Thread {
             sGLThreadManager.threadExiting(this);
         }
     }
-
 
     /**
      * This private method should only be called inside a
@@ -399,9 +397,9 @@ public class GLThread extends Thread {
             }
 
         } finally {
-                /*
-                 * clean-up everything...
-                 */
+            /*
+             * clean-up everything...
+             */
             synchronized (sGLThreadManager) {
                 stopEglSurfaceLocked();
                 stopEglContextLocked();
@@ -422,7 +420,7 @@ public class GLThread extends Thread {
     private boolean readyToDraw() {
         return (!mPaused) && mHasSurface && (!mSurfaceIsBad)
                 && (mWidth > 0) && (mHeight > 0)
-                && (mRequestRender );
+                && (mRequestRender);
     }
 
     public EglContextWrapper getEglContext() {
@@ -433,8 +431,8 @@ public class GLThread extends Thread {
         this.onCreateGLContextListener = onCreateGLContextListener;
     }
 
-    public interface OnCreateGLContextListener {
-        void onCreate(EglContextWrapper eglContext);
+    public int getRenderMode() {
+        return mRenderMode;
     }
 
     public void setRenderMode(int renderMode) {
@@ -445,10 +443,6 @@ public class GLThread extends Thread {
             mRenderMode = renderMode;
             sGLThreadManager.notifyAll();
         }
-    }
-
-    public int getRenderMode() {
-        return mRenderMode;
     }
 
     public void requestRender() {
@@ -635,7 +629,9 @@ public class GLThread extends Thread {
 
     // End of member variables protected by the sGLThreadManager monitor.
 
-    private IEglHelper mEglHelper;
+    public interface OnCreateGLContextListener {
+        void onCreate(EglContextWrapper eglContext);
+    }
 
 
     public interface GLWrapper {
@@ -648,6 +644,50 @@ public class GLThread extends Thread {
         GL wrap(GL gl);
     }
 
+
+    public interface EGLConfigChooser {
+        /**
+         * Choose a configuration from the list. Implementors typically
+         * implement this method by calling
+         * {@link EGL10#eglChooseConfig} and iterating through the results. Please consult the
+         * EGL specification available from The Khronos Group to learn how to call eglChooseConfig.
+         *
+         * @param egl     the EGL10 for the current display.
+         * @param display the current display.
+         * @return the chosen configuration.
+         */
+        EGLConfig chooseConfig(EGL10 egl, EGLDisplay display);
+
+        android.opengl.EGLConfig chooseConfig(android.opengl.EGLDisplay display, boolean recordable);
+    }
+
+
+    public interface EGLContextFactory {
+        EGLContext createContext(EGL10 egl, EGLDisplay display, EGLConfig eglConfig, EGLContext eglContext);
+
+        void destroyContext(EGL10 egl, EGLDisplay display, EGLContext context);
+
+
+        android.opengl.EGLContext createContextAPI17(android.opengl.EGLDisplay display, android.opengl.EGLConfig eglConfig, android.opengl.EGLContext eglContext);
+
+
+        void destroyContext(android.opengl.EGLDisplay display, android.opengl.EGLContext context);
+    }
+
+    public interface EGLWindowSurfaceFactory {
+        /**
+         * @return null if the surface cannot be constructed.
+         */
+        EGLSurface createWindowSurface(EGL10 egl, EGLDisplay display, EGLConfig config,
+                                       Object nativeWindow);
+
+        void destroySurface(EGL10 egl, EGLDisplay display, EGLSurface surface);
+
+        android.opengl.EGLSurface createWindowSurface(android.opengl.EGLDisplay display, android.opengl.EGLConfig config,
+                                                      Object nativeWindow);
+
+        void destroySurface(android.opengl.EGLDisplay display, android.opengl.EGLSurface surface);
+    }
 
     private static class GLThreadManager {
         private GLThread mEglOwner;
@@ -688,23 +728,6 @@ public class GLThread extends Thread {
             notifyAll();
         }
 
-    }
-
-
-    public interface EGLConfigChooser {
-        /**
-         * Choose a configuration from the list. Implementors typically
-         * implement this method by calling
-         * {@link EGL10#eglChooseConfig} and iterating through the results. Please consult the
-         * EGL specification available from The Khronos Group to learn how to call eglChooseConfig.
-         *
-         * @param egl     the EGL10 for the current display.
-         * @param display the current display.
-         * @return the chosen configuration.
-         */
-        EGLConfig chooseConfig(EGL10 egl, EGLDisplay display);
-
-        android.opengl.EGLConfig chooseConfig(android.opengl.EGLDisplay display, boolean recordable);
     }
 
     private static abstract class BaseConfigChooser
@@ -812,6 +835,14 @@ public class GLThread extends Thread {
      * and at least the specified depth and stencil sizes.
      */
     private static class ComponentSizeChooser extends BaseConfigChooser {
+        // Subclasses can adjust these values:
+        protected int mRedSize;
+        protected int mGreenSize;
+        protected int mBlueSize;
+        protected int mAlphaSize;
+        protected int mDepthSize;
+        protected int mStencilSize;
+        private int[] mValue;
         public ComponentSizeChooser(int redSize, int greenSize, int blueSize,
                                     int alphaSize, int depthSize, int stencilSize, int contextClientVersion) {
             super(new int[]{
@@ -865,15 +896,6 @@ public class GLThread extends Thread {
             }
             return defaultValue;
         }
-
-        private int[] mValue;
-        // Subclasses can adjust these values:
-        protected int mRedSize;
-        protected int mGreenSize;
-        protected int mBlueSize;
-        protected int mAlphaSize;
-        protected int mDepthSize;
-        protected int mStencilSize;
     }
 
     /**
@@ -881,14 +903,6 @@ public class GLThread extends Thread {
      * or without a depth buffer.
      */
     public static class SimpleEGLConfigChooser extends ComponentSizeChooser {
-        public static SimpleEGLConfigChooser createConfigChooser(boolean withDepthBuffer, int contextClientVersion) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                return new SimpleEGLConfigChooser(withDepthBuffer, contextClientVersion);
-            } else {
-                return new SimpleEGLConfigChooser(5, 6, 5, 8, 0, 0, contextClientVersion);
-            }
-        }
-
         public SimpleEGLConfigChooser(boolean withDepthBuffer, int contextClientVersion) {
             super(8, 8, 8, 0, withDepthBuffer ? 16 : 0, 0, contextClientVersion);
         }
@@ -896,19 +910,14 @@ public class GLThread extends Thread {
         public SimpleEGLConfigChooser(int redSize, int greenSize, int blueSize, int alphaSize, int depthSize, int stencilSize, int contextClientVersion) {
             super(redSize, greenSize, blueSize, alphaSize, depthSize, stencilSize, contextClientVersion);
         }
-    }
 
-
-    public interface EGLContextFactory {
-        EGLContext createContext(EGL10 egl, EGLDisplay display, EGLConfig eglConfig, EGLContext eglContext);
-
-        void destroyContext(EGL10 egl, EGLDisplay display, EGLContext context);
-
-
-        android.opengl.EGLContext createContextAPI17(android.opengl.EGLDisplay display, android.opengl.EGLConfig eglConfig, android.opengl.EGLContext eglContext);
-
-
-        void destroyContext(android.opengl.EGLDisplay display, android.opengl.EGLContext context);
+        public static SimpleEGLConfigChooser createConfigChooser(boolean withDepthBuffer, int contextClientVersion) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                return new SimpleEGLConfigChooser(withDepthBuffer, contextClientVersion);
+            } else {
+                return new SimpleEGLConfigChooser(5, 6, 5, 8, 0, 0, contextClientVersion);
+            }
+        }
     }
 
     public static class DefaultContextFactory implements EGLContextFactory {
@@ -956,22 +965,6 @@ public class GLThread extends Thread {
                 EglHelper.throwEglException("eglDestroyContext", EGL14.eglGetError());
             }
         }
-    }
-
-
-    public interface EGLWindowSurfaceFactory {
-        /**
-         * @return null if the surface cannot be constructed.
-         */
-        EGLSurface createWindowSurface(EGL10 egl, EGLDisplay display, EGLConfig config,
-                                       Object nativeWindow);
-
-        void destroySurface(EGL10 egl, EGLDisplay display, EGLSurface surface);
-
-        android.opengl.EGLSurface createWindowSurface(android.opengl.EGLDisplay display, android.opengl.EGLConfig config,
-                                       Object nativeWindow);
-
-        void destroySurface(android.opengl.EGLDisplay display, android.opengl.EGLSurface surface);
     }
 
     public static class DefaultWindowSurfaceFactory implements EGLWindowSurfaceFactory {
@@ -1149,12 +1142,12 @@ public class GLThread extends Thread {
             Choreographer.getInstance().removeFrameCallback(this);
         }
 
-        public void setCanSwap(boolean canSwap) {
-            this.canSwap = canSwap;
-        }
-
         public boolean isCanSwap() {
             return canSwap || glThread.getRenderMode() == RENDERMODE_WHEN_DIRTY;
+        }
+
+        public void setCanSwap(boolean canSwap) {
+            this.canSwap = canSwap;
         }
     }
 

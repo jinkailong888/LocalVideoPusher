@@ -25,36 +25,11 @@ import java.util.concurrent.Executors;
  * @since Aug 12, 2011
  */
 public final class FileLogger {
-    /**
-     * Log中的常量是int值，不适合给外面使用，这里统一用这个枚举值进行设置
-     */
-    public enum LogLevel {
-        VERBOSE(Log.VERBOSE),
-        DEBUG(Log.DEBUG),
-        INFO(Log.INFO),
-        WARN(Log.WARN),
-        ERROR(Log.ERROR),
-        ASSERT(Log.ASSERT);
-
-        private int mValue;
-
-        LogLevel(int value) {
-            mValue = value;
-        }
-
-        public int getValue() {
-            return mValue;
-        }
-    }
-
     private static final SimpleDateFormat LOG_DATE_TIME_FORMAT = new SimpleDateFormat("MM-dd HH:mm:ss.SSS");
-
     private static ExecutorService sLogExecutor = Executors.newSingleThreadExecutor();
-
     private static boolean sLogEnable = false;
     private static LogLevel sLogLevel = LogLevel.VERBOSE;
     private static LogFileManager sLogFileManager;
-
     private static Map<String, Integer> limitLogMap = new HashMap<>();
 
     /**
@@ -89,7 +64,7 @@ public final class FileLogger {
     }
 
     /**
-     * @param id the id for this log. Must be unique
+     * @param id                   the id for this log. Must be unique
      * @param cntTimesAfterLogOnce example: 1000 log once, then after 1000 call of this will log again
      */
     public static void limitLog(String id, String tag, String message, int cntTimesAfterLogOnce) {
@@ -98,7 +73,7 @@ public final class FileLogger {
         } else {
             Integer currentCnt = limitLogMap.get(id);
             if (currentCnt < cntTimesAfterLogOnce) {
-                limitLogMap.put(id, currentCnt+1);
+                limitLogMap.put(id, currentCnt + 1);
                 return;
             } else {
                 limitLogMap.put(id, 0);
@@ -395,15 +370,44 @@ public final class FileLogger {
         return String.format(Locale.CHINA, "%s pid=%d %s; %s\n", LOG_DATE_TIME_FORMAT.format(new Date()), android.os.Process.myPid(), tag, msg);
     }
 
+    /**
+     * Log中的常量是int值，不适合给外面使用，这里统一用这个枚举值进行设置
+     */
+    public enum LogLevel {
+        VERBOSE(Log.VERBOSE),
+        DEBUG(Log.DEBUG),
+        INFO(Log.INFO),
+        WARN(Log.WARN),
+        ERROR(Log.ERROR),
+        ASSERT(Log.ASSERT);
+
+        private int mValue;
+
+        LogLevel(int value) {
+            mValue = value;
+        }
+
+        public int getValue() {
+            return mValue;
+        }
+    }
+
     public static class LogFileManager {
+        public static final String PREFIX = "Log";
         private static final int LOG_FILES_MAX_NUM = 5; //文件最多有5个
         private static final int LOG_FILE_MAX_SIZE = 1000 * 1000 * 20; //文件最大20MB
-
         private static final SimpleDateFormat LOG_FILE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-        public static final String PREFIX = "Log";
-
         private File mCurrentLogFile;
         private String mLogFileDir;
+        private FileFilter fileFilter = new FileFilter() {
+            public boolean accept(File file) {
+                String tmp = file.getName().toLowerCase();
+                if (tmp.startsWith("log") && tmp.endsWith(".txt")) {
+                    return true;
+                }
+                return false;
+            }
+        };
 
         LogFileManager(String logFileDir) {
             mLogFileDir = logFileDir;
@@ -451,15 +455,5 @@ public final class FileLogger {
                 }
             }
         }
-
-        private FileFilter fileFilter = new FileFilter() {
-            public boolean accept(File file) {
-                String tmp = file.getName().toLowerCase();
-                if (tmp.startsWith("log") && tmp.endsWith(".txt")) {
-                    return true;
-                }
-                return false;
-            }
-        };
     }
 }

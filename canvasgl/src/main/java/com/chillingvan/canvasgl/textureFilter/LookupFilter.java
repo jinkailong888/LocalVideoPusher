@@ -13,8 +13,6 @@ import com.chillingvan.canvasgl.glcanvas.BasicTexture;
  * Created by Chilling on 2018/5/4.
  */
 public class LookupFilter extends TwoTextureFilter implements OneValueFilter {
-    private float mIntensity = 1.0f;
-
     private static final String LOOKUP_FRAGMENT_SHADER =
             "varying highp vec2 " + VARYING_TEXTURE_COORD + ";\n" +
                     " varying highp vec2 " + VARYING_TEXTURE_COORD2 + "; // TODO: This is not used\n" +
@@ -36,7 +34,7 @@ public class LookupFilter extends TwoTextureFilter implements OneValueFilter {
                     "     \n" +
                     "     highp vec2 quad2;\n" +
                     "     quad2.y = floor(ceil(blueColor) / 8.0);\n" +
-                    "     quad2.x = ceil(blueColor) - (quad2.y * 8.0);\n" +                    "     \n" +
+                    "     quad2.x = ceil(blueColor) - (quad2.y * 8.0);\n" + "     \n" +
                     "     highp vec2 texPos1;\n" +
                     "     texPos1.x = (quad1.x * 0.125) + 0.5/512.0 + ((0.125 - 1.0/512.0) * textureColor.r);\n" +
                     "     texPos1.y = (quad1.y * 0.125) + 0.5/512.0 + ((0.125 - 1.0/512.0) * textureColor.g);\n" +
@@ -51,6 +49,7 @@ public class LookupFilter extends TwoTextureFilter implements OneValueFilter {
                     "     lowp vec4 newColor = mix(newColor1, newColor2, fract(blueColor));\n" +
                     "     gl_FragColor = mix(textureColor, vec4(newColor.rgb, textureColor.w), intensity);\n" +
                     " }";
+    private float mIntensity = 1.0f;
 
     public LookupFilter(@NonNull Bitmap secondBitmap) {
         super(secondBitmap);

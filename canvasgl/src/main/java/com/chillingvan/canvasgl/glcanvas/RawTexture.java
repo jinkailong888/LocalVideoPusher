@@ -53,7 +53,6 @@ public class RawTexture extends BasicTexture {
     }
 
     /**
-     *
      * @param isFlipped whether vertically flip this texture
      */
     public void setIsFlippedVertically(boolean isFlipped) {
@@ -80,9 +79,9 @@ public class RawTexture extends BasicTexture {
     }
 
     @Override
-     public void yield() {
-         // we cannot free the secondBitmap because we have no backup.
-     }
+    public void yield() {
+        // we cannot free the secondBitmap because we have no backup.
+    }
 
     @Override
     protected int getTarget() {

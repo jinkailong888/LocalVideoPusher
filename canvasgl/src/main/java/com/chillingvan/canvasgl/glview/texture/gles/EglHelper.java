@@ -55,8 +55,24 @@ public class EglHelper implements IEglHelper {
         this.eglWindowSurfaceFactory = eglWindowSurfaceFactory;
     }
 
+    public static void throwEglException(String function, int error) {
+        String message = formatEglError(function, error);
+        FileLogger.e(TAG, "throwEglException tid=" + Thread.currentThread().getId() + " "
+                + message);
+        throw new RuntimeException(message);
+    }
+
+    public static void logEglErrorAsWarning(String tag, String function, int error) {
+        Log.w(tag, formatEglError(function, error));
+    }
+
+    public static String formatEglError(String function, int error) {
+        return function + " failed: " + EGLLogWrapper.getErrorString(error);
+    }
+
     /**
      * Initialize EGL for a given configuration spec.
+     *
      * @param eglContext
      */
     @Override
@@ -85,10 +101,10 @@ public class EglHelper implements IEglHelper {
         }
         mEglConfig = eglConfigChooser.chooseConfig(mEgl, mEglDisplay);
 
-            /*
-            * Create an EGL context. We want to do this as rarely as we can, because an
-            * EGL context is a somewhat heavy object.
-            */
+        /*
+         * Create an EGL context. We want to do this as rarely as we can, because an
+         * EGL context is a somewhat heavy object.
+         */
         mEglContext = eglContextFactory.createContext(mEgl, mEglDisplay, mEglConfig, eglContext.getEglContextOld());
         if (mEglContext == null || mEglContext == EGL10.EGL_NO_CONTEXT) {
             mEglContext = null;
@@ -209,21 +225,6 @@ public class EglHelper implements IEglHelper {
 
     private void throwEglException(String function) {
         throwEglException(function, mEgl.eglGetError());
-    }
-
-    public static void throwEglException(String function, int error) {
-        String message = formatEglError(function, error);
-        FileLogger.e(TAG, "throwEglException tid=" + Thread.currentThread().getId() + " "
-                + message);
-        throw new RuntimeException(message);
-    }
-
-    public static void logEglErrorAsWarning(String tag, String function, int error) {
-        Log.w(tag, formatEglError(function, error));
-    }
-
-    public static String formatEglError(String function, int error) {
-        return function + " failed: " + EGLLogWrapper.getErrorString(error);
     }
 
 }

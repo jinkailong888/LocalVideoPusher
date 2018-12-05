@@ -47,6 +47,10 @@ public class CropFilter extends BasicTextureFilter {
         this.bottom = bottom;
     }
 
+    public static float calc(int wantCoord, int size) {
+        return (float) wantCoord / size;
+    }
+
     @Override
     public String getFragmentShader() {
         return CROP_FRAGMENT_SHADER;
@@ -60,7 +64,6 @@ public class CropFilter extends BasicTextureFilter {
         OpenGLUtil.setFloat(GLES20.glGetUniformLocation(program, UNIFORM_RIGHT), right);
         OpenGLUtil.setFloat(GLES20.glGetUniformLocation(program, UNIFORM_BOTTOM), bottom);
     }
-
 
     public void setLeft(float left) {
 
@@ -80,9 +83,5 @@ public class CropFilter extends BasicTextureFilter {
     public void setBottom(float bottom) {
 
         this.bottom = bottom;
-    }
-
-    public static float calc(int wantCoord, int size) {
-        return (float)wantCoord / size;
     }
 }

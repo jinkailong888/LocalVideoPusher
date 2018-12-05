@@ -22,7 +22,6 @@ package com.chillingvan.canvasgl.textureFilter;
 
 import com.chillingvan.canvasgl.ICanvasGL;
 import com.chillingvan.canvasgl.glcanvas.BasicTexture;
-import com.chillingvan.canvasgl.glcanvas.GLCanvas;
 
 /**
  * Created by Matthew on 2016/10/14.
@@ -30,10 +29,12 @@ import com.chillingvan.canvasgl.glcanvas.GLCanvas;
 
 public interface TextureFilter {
     String getVertexShader();
+
     String getFragmentShader();
 
     String getOesFragmentProgram();
 
     void onPreDraw(int program, BasicTexture texture, ICanvasGL canvas);
+
     void destroy();
 }

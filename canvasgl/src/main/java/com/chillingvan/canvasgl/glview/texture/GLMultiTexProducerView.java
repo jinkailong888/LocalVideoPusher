@@ -66,14 +66,12 @@ public abstract class GLMultiTexProducerView extends GLMultiTexConsumerView {
     }
 
 
-
     @Override
     protected int getRenderMode() {
         return GLThread.RENDERMODE_WHEN_DIRTY;
     }
 
     /**
-     *
      * @return The initial produced texture count
      */
     protected int getInitialTexCount() {
@@ -82,6 +80,7 @@ public abstract class GLMultiTexProducerView extends GLMultiTexConsumerView {
 
     /**
      * If it is used, it must be called before {@link GLThread#start()} called.
+     *
      * @param producedTextureTarget GLES20.GL_TEXTURE_2D or GLES11Ext.GL_TEXTURE_EXTERNAL_OES
      */
     public void setProducedTextureTarget(int producedTextureTarget) {
@@ -172,17 +171,18 @@ public abstract class GLMultiTexProducerView extends GLMultiTexConsumerView {
     }
 
     /**
-     * Listen when the produced textures created.
-     */
-    public interface SurfaceTextureCreatedListener {
-        void onCreated(List<GLTexture> producedTextureList);
-    }
-
-    /**
      * If {@link #setSharedEglContext(EglContextWrapper)} is not called, this will not be triggered.
+     *
      * @param canvas
      * @param producedTextures
      * @param consumedTextures
      */
     protected abstract void onGLDraw(ICanvasGL canvas, List<GLTexture> producedTextures, List<GLTexture> consumedTextures);
+
+    /**
+     * Listen when the produced textures created.
+     */
+    public interface SurfaceTextureCreatedListener {
+        void onCreated(List<GLTexture> producedTextureList);
+    }
 }

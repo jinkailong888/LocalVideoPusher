@@ -11,12 +11,12 @@ import com.chillingvan.canvasgl.glcanvas.BasicTexture;
  * Created by Chilling on 2017/4/15.
  */
 
-public class ColorMatrixFilter extends BasicTextureFilter implements OneValueFilter{
+public class ColorMatrixFilter extends BasicTextureFilter implements OneValueFilter {
 
     public static final String UNIFORM_COLOR_MATRIX = "colorMatrix";
     public static final String UNIFORM_INTENSITY = "intensity";
     public static final String COLOR_MATRIX_FRAGMENT_SHADER = "" +
-            "precision mediump float; \n"+
+            "precision mediump float; \n" +
             "varying highp vec2 " + VARYING_TEXTURE_COORD + ";\n" +
             "\n" +
             "uniform sampler2D " + TEXTURE_SAMPLER_UNIFORM + ";\n" +

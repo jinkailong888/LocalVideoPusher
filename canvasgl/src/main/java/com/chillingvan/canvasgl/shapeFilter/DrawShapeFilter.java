@@ -8,8 +8,10 @@ import com.chillingvan.canvasgl.ICanvasGL;
 
 public interface DrawShapeFilter {
     String getVertexShader();
+
     String getFragmentShader();
 
     void onPreDraw(int program, ICanvasGL canvas);
+
     void destroy();
 }
